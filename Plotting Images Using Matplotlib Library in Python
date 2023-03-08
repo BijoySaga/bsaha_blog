@@ -209,5 +209,3 @@ ravel function returns a flattened array of the image data.
 ## ***Conclusion:***
 
 We learned how to use the ‘image’ module of matplotlib to perform Various operations on the image including turning an image into a grayscale image, selecting a part of the image, displaying the color bar to the image, applying different color schemes to the image and saving the modified image. We also learned how to plot the histogram of the image data.
-
-![](https://cdn.hashnode.com/res/hashnode/image/upload/v1678267218211/079ea43c-1efd-4005-a578-86087b6bd7e7.gif align="center")
