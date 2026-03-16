@@ -1,1 +1,35 @@
-would sync Hashnode post with github thorugh api
+name: Sync Hashnode Blogs
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 */12 * * *"
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Fetch posts from Hashnode
+        run: |
+          curl https://gql.hashnode.com \
+          -H "Authorization: ${{ secrets.HASHNODE_TOKEN }}" \
+          -H "Content-Type: application/json" \
+          -d '{"query":"{ me { posts(page:0){ title slug contentMarkdown } } }"}' \
+          > posts.json
+
+      - name: Save posts as markdown
+        run: |
+          mkdir -p blogs
+          jq -r '.data.me.posts[] | "# " + .title + "\n\n" + .contentMarkdown' posts.json > blogs/hashnode-posts.md
+
+      - name: Commit changes
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+          git add .
+          git commit -m "Sync Hashnode blogs" || echo "No changes"
+          git push
