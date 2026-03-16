@@ -9,25 +9,31 @@ jobs:
   sync:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
 
       - name: Fetch posts from Hashnode
         run: |
           curl https://gql.hashnode.com \
           -H "Authorization: ${{ secrets.HASHNODE_TOKEN }}" \
           -H "Content-Type: application/json" \
-          -d '{"query":"{ me { posts(page:0){ title slug contentMarkdown } } }"}' \
+          -d '{"query":"{ publication(host:\"hashnode.com\") { posts(first:20) { edges { node { title slug contentMarkdown } } } } }"}' \
           > posts.json
 
-      - name: Install jq
-        run: sudo apt-get install jq
+          echo "----- HASHNODE RESPONSE -----"
+          cat posts.json
 
       - name: Convert posts to markdown files
         run: |
           mkdir -p blogs
-          jq -c '.data.me.posts[]' posts.json | while read post; do
+          jq -c '.data.publication.posts.edges[].node' posts.json | while read post; do
             title=$(echo $post | jq -r '.title')
             slug=$(echo $post | jq -r '.slug')
             content=$(echo $post | jq -r '.contentMarkdown')
@@ -41,6 +47,9 @@ jobs:
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
+
           git add blogs
-          git commit -m "Sync Hashnode blogs" || echo "No changes"
+
+          git commit -m "Auto sync Hashnode blogs" || echo "No changes to commit"
+
           git push
