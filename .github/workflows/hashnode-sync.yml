@@ -23,7 +23,7 @@ jobs:
         run: |
           curl https://gql.hashnode.com \
           -H "Content-Type: application/json" \
-          -d '{"query":"{ publication(host:\"bsaha.hashnode.dev\") { posts(first:10) { edges { node { title slug contentMarkdown } } } } }"}' \
+          -d '{"query":"{ user(username:\"bsaha\") { posts(page:0) { nodes { title slug contentMarkdown } } } }"}' \
           > posts.json
 
           echo "========== HASHNODE RESPONSE =========="
@@ -33,16 +33,16 @@ jobs:
         run: |
           mkdir -p blogs
 
-          count=$(jq '.data.publication.posts.edges | length' posts.json)
+          count=$(jq '.data.user.posts.nodes | length' posts.json)
 
           echo "Total posts found: $count"
 
           if [ "$count" -eq 0 ]; then
-            echo "❌ No posts found from Hashnode API"
+            echo "❌ No posts found"
             exit 1
           fi
 
-          jq -c '.data.publication.posts.edges[].node' posts.json | while read post; do
+          jq -c '.data.user.posts.nodes[]' posts.json | while read post; do
             title=$(echo $post | jq -r '.title')
             slug=$(echo $post | jq -r '.slug')
             content=$(echo $post | jq -r '.contentMarkdown')
